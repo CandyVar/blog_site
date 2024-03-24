@@ -1,0 +1,25 @@
+{
+  "news": [
+    {
+      "content": "1",
+      "title": "1",
+      "user": {
+        "name": "CandyVar<script>alert()</script>"
+      }
+    },
+    {
+      "content": "123211232132131221",
+      "title": "213123",
+      "user": {
+        "name": "CandyVar<script>alert()</script>"
+      }
+    },
+    {
+      "content": "No one care",
+      "title": "Test",
+      "user": {
+        "name": "CandyVar<script>alert()</script>"
+      }
+    }
+  ]
+}

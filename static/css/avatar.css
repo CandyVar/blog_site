@@ -1,0 +1,42 @@
+.message {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.avatar {
+  width: 50px;
+  height: 50px;
+  margin-right: 10px;
+}
+
+.avatar img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.author {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.content {
+  display: grid;
+  max-width: 80%;
+}
+
+.quote {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.quote-author {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.quote-content {
+  margin-left: 30px;
+}
