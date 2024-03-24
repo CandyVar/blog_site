@@ -1,29 +1,73 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+{% extends "header.html" %}
 
 {% block content %}
-    <h1>Авторизация</h1>
-    <form action="" method="post">
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.email.label }}<br>
-            {{ form.email(class="form-control", type="email") }}<br>
-            {% for error in form.email.errors %}
+<form action="" method="post">
+{{ form.hidden_tag() }}
+<html style="font-size: 16px;" lang="ru"><head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="keywords" content="Member Login">
+    <meta name="description" content="">
+    <title>Home 1</title>
+    <link rel="stylesheet" href="static/css/nicepage.css" media="screen">
+<link rel="stylesheet" href="static/css/login.css" media="screen">
+    <script class="u-script" type="text/javascript" src="static/js/jquery-1.9.1.min.js" defer=""></script>
+    <script class="u-script" type="text/javascript" src="static/js/nicepage.js" defer=""></script>
+    <meta name="generator" content="Nicepage 6.6.3, nicepage.com">
+    <link id="u-theme-google-font" rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i|Open+Sans:300,300i,400,400i,500,500i,600,600i,700,700i,800,800i">
+    <meta name="theme-color" content="#478ac9">
+    <meta property="og:title" content="Home 1">
+    <meta property="og:type" content="website">
+  <meta data-intl-tel-input-cdn-path="intlTelInput/"></head>
+  <body data-path-to-root="./" data-include-products="false" class="u-body u-xl-mode" data-lang="ru">
+    <section class="u-clearfix u-gradient u-section-1" id="sec-86a8">
+      <div class="u-clearfix u-sheet u-valign-middle u-sheet-1">
+        <div class="u-align-center u-container-style u-group u-shape-rectangle u-group-1">
+          <div class="u-container-layout u-valign-middle u-container-layout-1"><span class="u-file-icon u-icon u-text-white u-icon-1"><img src="static/img/747376-e872e00f.png" alt=""></span>
+            <h2 class="u-text u-text-body-alt-color u-text-default u-text-1">Вход в аккаунт</h2>
+            <div class="u-form u-login-control u-form-1">
+              <form action="#" class="u-clearfix u-form-custom-backend u-form-spacing-10 u-form-vertical u-inner-form" source="custom" name="form" style="padding: 0px;" method="post">
+                <div class="u-form-group u-form-name">
+                    <p>
+                {{ form.email.label(class="u-label u-text-grey-5 u-label-1") }}<br>
+                {{ form.email(class="u-border-2 u-border-grey-10 u-grey-10 u-input u-input-rectangle u-radius u-input-1", type="email") }}<br>
+                {% for error in form.email.errors %}
                 <div class="alert alert-danger" role="alert">
                     {{ error }}
                 </div>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.password.label }}<br>
-            {{ form.password(class="form-control", type="password") }}<br>
-            {% for error in form.password.errors %}
-                <div class="alert alert-danger" role="alert">
-                    {{ error }}
+                {% endfor %}
+                 </p>
                 </div>
-            {% endfor %}
-        </p>
-        <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
-        <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
-        <div>{{ message }}</div>
-    </form>
+                <div class="u-form-group u-form-password">
+                    <p>
+                    {{ form.password.label(class="u-label u-text-grey-5 u-label-2")}}<br>
+                    {{ form.password(class="u-border-2 u-border-grey-10 u-grey-10 u-input u-input-rectangle u-radius u-input-2", type="password") }}<br>
+                    {% for error in form.password.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                    </p>
+                </div>
+
+                <div class="u-align-left u-form-group u-form-submit">
+                    <p>{{ form.remember_me() }} {{ form.remember_me.label(class="u-block-c6c6-14 u-field-label u-text-grey-5") }}</p>
+
+                    <p class="u-align-left u-form-group u-form-submit">
+                        {{ form.submit(type="submit", class="btn u-border-none u-btn u-btn-round u-button-style u-hover-palette-2-base u-palette-2-light-1 u-radius u-text-active-palette-2-base u-text-black u-text-hover-white u-btn-1") }}
+                    </p>
+                    <div>{{ message }}</div>
+
+                </div>
+              </form>
+            </div>
+            <a href="#" class="u-border-1 u-border-active-grey-10 u-border-hover-grey-10 u-border-no-left u-border-no-right u-border-no-top u-btn u-button-style u-login-control u-login-create-account u-none u-text-body-alt-color u-btn-2" data-animation-name="" data-animation-duration="0" data-animation-delay="0" data-animation-direction="">Forgot password?</a>
+            <a href="#" class="u-border-1 u-border-active-grey-10 u-border-hover-grey-10 u-border-no-left u-border-no-right u-border-no-top u-btn u-button-style u-login-control u-login-create-account u-none u-text-body-alt-color u-btn-3">Don't have an account?</a>
+          </div>
+        </div>
+      </div>
+    </section>
+</form>
 {% endblock %}
+</body></html>
