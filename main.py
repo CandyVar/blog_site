@@ -49,12 +49,12 @@ def test():
             (News.user == current_user) | (News.is_private != True))
     else:
         news = db_sess.query(News).filter(News.is_private != True)
-    return render_template("blog.html", news=news[::-1], admins=admins)
+    return render_template("blog.html", news=news[::-1], admins=admins, status=True)
 
 
 @app.route('/')
 def test2():
-    return render_template('Главная.html', title='Тест страница')
+    return render_template('Главная.html', title='Тест страница', status=True)
 
 
 @app.route('/test3')
@@ -65,7 +65,7 @@ def test3():
             (News.user == current_user) | (News.is_private != True))
     else:
         news = db_sess.query(News).filter(News.is_private != True)
-    return render_template("Страница-1.html", news=news[::-1])
+    return render_template("Страница-1.html", news=news[::-1], status=True)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -249,7 +249,12 @@ def reqister():
 
 @app.route('/view_acc')
 def view():
-    return render_template('profile.html', user=current_user)
+    return render_template('profile.html', user=current_user, status=False)
+
+
+@app.route('/rules')  # todo rules of communication
+def rule():
+    return ''
 
 
 @app.errorhandler(404)

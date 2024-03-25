@@ -3,11 +3,11 @@
 {% block content %}
 <head><link rel="stylesheet" href="static/css/blog.css"></head>
   <body data-path-to-root="./" data-include-products="false" class="u-body u-xl-mode" data-lang="ru">
-<h2 align="center">Профиль {{user.name}}</h2>
+<h2 align="center">Профиль</h2>
 <section class="skrollable u-clearfix u-section-2" id="sec-1972">
     <div class="u-clearfix u-sheet u-valign-middle-xs u-sheet-1">
     <div class="u-clearfix u-sheet u-valign-middle-xs u-sheet-1">
-        <img class="u-image u-image-circle u-image-1" src="static/img/ranks/{{ user.rank }}.png" alt="" data-image-width="500" data-image-height="500">
+        <img class="u-image u-image-circle u-image-1" src="static/img/ranks/{{ user.rank }}.png" alt="" width="500" data-image-height="500">
         <img class="u-image u-image-circle u-image-2" src="static/img/up/{{ user.id }}.jpeg" alt="" data-image-width="500" data-image-height="500" >
 </div>
     </div>
@@ -16,5 +16,3 @@
 <p></p>
 <h4>{{user.about}}</h4>
 {% endblock %}
-
-<!--    <img class="u-image u-image-circle u-image-1 no-wrap" src="static/img/ranks/{{ user.rank }}.png" alt="" width="300" height="300" hspace="400">-->
