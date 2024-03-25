@@ -1,5 +1,6 @@
 import sqlite3
 
+
 # Функция для изменения поля пользователя
 def update_user_field(user_id, field, new_value):
     # Подключаемся к базе данных
@@ -23,6 +24,7 @@ def update_user_field(user_id, field, new_value):
     # Закрываем соединение с базой данных
     conn.close()
 
+
 # Основная функция программы
 def main():
     user_id = input("Введите ID пользователя: ")
@@ -30,6 +32,7 @@ def main():
     new_value = input("Введите новое значение: ")
 
     update_user_field(user_id, field, new_value)
+
 
 if __name__ == "__main__":
     main()

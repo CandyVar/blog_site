@@ -27,6 +27,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 admins = 5
 
+
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()
@@ -138,7 +139,6 @@ def sample_file_upload():
             return "Ошибка при загрузке файла"
 
 
-
 @app.route('/blog/new', methods=['GET', 'POST'])
 @login_required
 def add_news():
@@ -245,6 +245,11 @@ def reqister():
         db_sess.commit()
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
+
+
+@app.route('/view_acc')
+def view():
+    return render_template('profile.html', user=current_user)
 
 
 @app.errorhandler(404)
