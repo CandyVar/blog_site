@@ -32,6 +32,10 @@ def load_user(user_id):
     db_sess = db_session.create_session()
     return db_sess.query(User).get(user_id)
 
+@app.route('/')
+def index():
+    return render_template('Главная.html', title='Главная страница')
+
 
 @app.route('/logout')
 @login_required
@@ -48,23 +52,7 @@ def test():
             (News.user == current_user) | (News.is_private != True))
     else:
         news = db_sess.query(News).filter(News.is_private != True)
-    return render_template("blog.html", news=news[::-1], admins=admins)
-
-
-@app.route('/')
-def test2():
-    return render_template('Главная.html', title='Тест страница')
-
-
-@app.route('/test3')
-def test3():
-    db_sess = db_session.create_session()
-    if current_user.is_authenticated:
-        news = db_sess.query(News).filter(
-            (News.user == current_user) | (News.is_private != True))
-    else:
-        news = db_sess.query(News).filter(News.is_private != True)
-    return render_template("Страница-1.html", news=news[::-1])
+    return render_template("blog.html",title='Блог', news=news[::-1], admins=admins)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -80,22 +68,6 @@ def login():
                                message="Неправильный логин или пароль",
                                form=form)
     return render_template('login.html', title='Авторизация', form=form)
-
-
-@app.route("/1")
-def index():
-    db_sess = db_session.create_session()
-    if current_user.is_authenticated:
-        news = db_sess.query(News).filter(
-            (News.user == current_user) | (News.is_private != True))
-    else:
-        news = db_sess.query(News).filter(News.is_private != True)
-    return render_template("index.html", news=news[::-1])
-
-
-@app.route("/main")
-def main():
-    return render_template("main_page.html")
 
 
 @app.route('/avatar', methods=['POST', 'GET'])
@@ -219,7 +191,7 @@ def news_delete(id):
 def news_item(id):
     db_sess = db_session.create_session()
     news = db_sess.query(News).filter(News.id == id).first()
-    return render_template("blog_item.html", news=news)
+    return render_template("blog_item.html", news=news, title=news.title)
 
 
 @app.route('/register', methods=['GET', 'POST'])
