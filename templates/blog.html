@@ -2,6 +2,7 @@
 {% extends "header.html" %}
 
 {% block content %}
+<title>{{title}}</title>
 <html style="font-size: 16px;" lang="ru"><head>
 <link rel="stylesheet" href="static/css/blog.css"></head>
   <body data-path-to-root="./" data-include-products="false" class="u-body u-xl-mode" data-lang="ru">
@@ -42,7 +43,7 @@
         <img class="u-image u-image-circle u-image-2" src="static/img/up/{{ item.user.id }}.jpeg" alt="" data-image-width="1980" data-image-height="1320">
         <h4 class="u-text u-text-1">{{ item.title }}</h4>
         <div class="u-container-style u-group u-shape-rectangle u-group-1">
-          {% if current_user.is_authenticated and current_user == item.user or current_user.rank >= admins%}
+          {% if current_user.is_authenticated and current_user == item.user or current_user.is_authenticated and current_user.rank >= admins%}
           <div class="u-container-layout">
             <a href="/blog/edit/{{ item.id }}" class="u-border-none u-btn u-btn-round u-button-style u-hover-palette-2-base u-palette-2-light-2 u-radius u-btn-1">Изменить</a>
             <a href="/blog_delete/{{ item.id }}" class="u-border-none u-btn u-btn-round u-button-style u-hover-palette-2-base u-palette-2-light-2 u-radius u-btn-2">Удалить</a>
