@@ -5,11 +5,11 @@ from flask import redirect
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restful import abort, Api
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
-from werkzeug.utils import secure_filename
+from sqlalchemy.orm import sessionmaker
+
 
 from forms.news import NewsForm
-from forms.user import RegisterForm, LoginForm, AvatarForm
+from forms.user import RegisterForm, LoginForm
 from data.news import News
 from data import db_session, news_api, news_resources
 from data.users import User
