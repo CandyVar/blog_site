@@ -5,11 +5,11 @@ from flask import redirect
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restful import abort, Api
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
+from sqlalchemy.orm import Session, sessionmaker
+from werkzeug.utils import secure_filename
 
 from forms.news import NewsForm
-from forms.user import RegisterForm, LoginForm
+from forms.user import RegisterForm, LoginForm, AvatarForm
 from data.news import News
 from data import db_session, news_api, news_resources
 from data.users import User
@@ -142,19 +142,29 @@ def sample_file_upload():
 @app.route('/blog/new', methods=['GET', 'POST'])
 @login_required
 def add_news():
-    form = NewsForm()
-    if form.validate_on_submit():
-        db_sess = db_session.create_session()
-        news = News()
-        news.title = form.title.data
-        news.content = form.content.data
-        news.is_private = form.is_private.data
-        current_user.news.append(news)
-        db_sess.merge(current_user)
-        db_sess.commit()
-        return redirect('/blog')
-    return render_template('news.html', title='Добавление новости',
-                           form=form)
+    if request.method == 'GET':
+        form = NewsForm()
+        if form.validate_on_submit():
+            db_sess = db_session.create_session()
+            news = News()
+            news.title = form.title.data
+            news.content = form.content.data
+            news.is_private = form.is_private.data
+            current_user.news.append(news)
+            db_sess.merge(current_user)
+            db_sess.commit()
+            return redirect('/blog')
+        return render_template('news.html', title='Добавление новости',
+                               form=form)
+    elif request.method == 'POST':
+        if 'file' not in request.files:
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            return redirect(request.url)
+        if file:
+            filename = str(current_user.id) + '_'.join(new.title) + '.jpeg'
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
 
 @app.route('/blog/edit/<int:id>', methods=['GET', 'POST'])
@@ -230,6 +240,10 @@ def reqister():
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Пароли не совпадают")
+        elif len(form.password.data) < 3:
+            return render_template('register.html', title='Регистрация',
+                                   form=form,
+                                   message="Ненадежный пароль")
         db_sess = db_session.create_session()
         if db_sess.query(User).filter(User.email == form.email.data).first():
             return render_template('register.html', title='Регистрация',
@@ -249,12 +263,17 @@ def reqister():
 
 @app.route('/view_acc')
 def view():
-    return render_template('profile.html', user=current_user, status=False)
+    return render_template('profile.html', user=current_user, status=False, property=current_user)
+
+
+@app.route('/open_chat/<current_user>')
+def chat():
+    return ''
 
 
 @app.route('/rules')  # todo rules of communication
 def rule():
-    return ''
+    return render_template('rules.html', status=True)
 
 
 @app.errorhandler(404)

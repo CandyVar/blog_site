@@ -24,6 +24,13 @@
         {% endfor %}
     </p>
     <p>{{ form.is_private() }} {{ form.is_private.label }}</p>
+    <form method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="photo">Выберите обложку поста</label>
+            <input type="file" class="form-control-file" id="photo" name="file">
+        </div>
+    </form>
+    </body>
     <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
     {{message}}
 </form>

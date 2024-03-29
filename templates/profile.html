@@ -12,6 +12,9 @@
 </div>
     </div>
 </section>
+{% if current_user != property %}
+<a href="/open_chat" class="u-border-none u-btn u-btn-round u-button-style u-hover-palette-2-base u-palette-2-light-2 u-radius u-btn-1">Написать</a>
+{% endif %}
 <h3>Немного о себе:</h3>
 <p></p>
 <h4>{{user.about}}</h4>
