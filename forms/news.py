@@ -10,7 +10,3 @@ class NewsForm(FlaskForm):
     content = TextAreaField("Содержание")
     is_private = BooleanField("Личное")
     submit = SubmitField('Применить')
-    cover = StringField
-    categories = orm.relationship("Category",
-                                  secondary="association",
-                                  backref="news")
