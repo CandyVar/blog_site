@@ -1,0 +1,40 @@
+{% extends "header.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+<script class="u-script" type="text/javascript" src="{{ url_for('static', filename='js/avatar.js') }}" defer=""></script>
+<html>
+<style>
+    .example-2 .btn-tertiary{color:white;padding:0;line-height:40px;width:300px;margin:auto;display:block;border:2px solid white;background-color}
+    .example-2 .btn-tertiary:hover,.example-2 .btn-tertiary:focus{color:#888;border-color:#888}
+    .example-2 .input-file{width:.1px;height:.1px;opacity:0;overflow:hidden;position:absolute;z-index:-1}
+    .example-2 .input-file + .js-labelFile{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 10px;cursor:pointer}
+    .example-2 .input-file + .js-labelFile .icon:before{content:"\f093"}
+    .example-2 .input-file + .js-labelFile.has-file .icon:before{content:"\f00c";color:#5AAC7B}
+    .center {text-align: center;}
+    .base1 {padding-top: 70px;}
+
+</style>
+
+<body>
+  <section class="base1">
+      <h1 class="center">Загрузим файл</h1>
+  <form method="post" enctype="multipart/form-data">
+    <div class="example-2">
+  <div class="form-group">
+    <input type="file" name="file" id="file" class="input-file">
+    <label for="file" class="btn btn-tertiary js-labelFile">
+      <i class="icon fa fa-check"></i>
+      <span class="js-fileName">Загрузить файл</span>
+    </label>
+  </div>
+ </div>
+    <section class="center">
+        <button type="submit"  class="btn btn-primary">Отправить</button>
+    </section>
+  </form>
+  </section>
+</body>
+
+</html>
+{% endblock %}
