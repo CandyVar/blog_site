@@ -27,6 +27,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 admins = 5
 
+
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()
@@ -48,12 +49,12 @@ def test():
             (News.user == current_user) | (News.is_private != True))
     else:
         news = db_sess.query(News).filter(News.is_private != True)
-    return render_template("blog.html", news=news[::-1], admins=admins)
+    return render_template("blog.html", news=news[::-1], admins=admins, status=True)
 
 
 @app.route('/')
 def test2():
-    return render_template('Главная.html', title='Тест страница')
+    return render_template('Главная.html', title='Тест страница', status=True)
 
 
 @app.route('/test3')
@@ -64,7 +65,7 @@ def test3():
             (News.user == current_user) | (News.is_private != True))
     else:
         news = db_sess.query(News).filter(News.is_private != True)
-    return render_template("Страница-1.html", news=news[::-1])
+    return render_template("Страница-1.html", news=news[::-1], status=True)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -138,23 +139,23 @@ def sample_file_upload():
             return "Ошибка при загрузке файла"
 
 
-
 @app.route('/blog/new', methods=['GET', 'POST'])
 @login_required
 def add_news():
-    form = NewsForm()
-    if form.validate_on_submit():
-        db_sess = db_session.create_session()
-        news = News()
-        news.title = form.title.data
-        news.content = form.content.data
-        news.is_private = form.is_private.data
-        current_user.news.append(news)
-        db_sess.merge(current_user)
-        db_sess.commit()
-        return redirect('/blog')
-    return render_template('news.html', title='Добавление новости',
-                           form=form)
+    if request.method == 'GET':
+        form = NewsForm()
+        if form.validate_on_submit():
+            db_sess = db_session.create_session()
+            news = News()
+            news.title = form.title.data
+            news.content = form.content.data
+            news.is_private = form.is_private.data
+            current_user.news.append(news)
+            db_sess.merge(current_user)
+            db_sess.commit()
+            return redirect('/blog')
+        return render_template('news.html', title='Добавление новости',
+                               form=form)
 
 
 @app.route('/blog/edit/<int:id>', methods=['GET', 'POST'])
@@ -230,6 +231,10 @@ def reqister():
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Пароли не совпадают")
+        elif len(form.password.data) < 3:
+            return render_template('register.html', title='Регистрация',
+                                   form=form,
+                                   message="Ненадежный пароль")
         db_sess = db_session.create_session()
         if db_sess.query(User).filter(User.email == form.email.data).first():
             return render_template('register.html', title='Регистрация',
@@ -245,6 +250,21 @@ def reqister():
         db_sess.commit()
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
+
+
+@app.route('/view_acc')
+def view():
+    return render_template('profile.html', user=current_user, status=False, property=current_user)
+
+
+@app.route('/open_chat/<current_user>')
+def chat():
+    return ''
+
+
+@app.route('/rules')  # todo rules of communication
+def rule():
+    return render_template('rules.html', status=True)
 
 
 @app.errorhandler(404)

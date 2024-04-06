@@ -2,6 +2,12 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, EmailField, TextAreaField, FileField, \
     validators
 from wtforms.validators import DataRequired
+import datetime
+
+
+def calculate_age(date):
+    today = datetime.today()
+    return today.year - date.year - ((today.month, today.day) < (date.month, date.day))
 
 
 class RegisterForm(FlaskForm):
