@@ -156,15 +156,6 @@ def add_news():
             return redirect('/blog')
         return render_template('news.html', title='Добавление новости',
                                form=form)
-    elif request.method == 'POST':
-        if 'file' not in request.files:
-            return redirect(request.url)
-        file = request.files['file']
-        if file.filename == '':
-            return redirect(request.url)
-        if file:
-            filename = str(current_user.id) + '_'.join(new.title) + '.jpeg'
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
 
 @app.route('/blog/edit/<int:id>', methods=['GET', 'POST'])
