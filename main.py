@@ -7,7 +7,7 @@ from flask_restful import abort, Api
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from werkzeug.utils import secure_filename
-
+from db.DB import import_history_of_chat, downoload_users_datum, find_news_author
 from forms.news import NewsForm
 from forms.user import RegisterForm, LoginForm, AvatarForm
 from data.news import News
@@ -46,9 +46,9 @@ def test():
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
         news = db_sess.query(News).filter(
-            (News.user == current_user) | (News.is_private != True))
+            (News.user == current_user) | (News.is_private is not True))
     else:
-        news = db_sess.query(News).filter(News.is_private != True)
+        news = db_sess.query(News).filter(News.is_private is not True)
     return render_template("blog.html", news=news[::-1], admins=admins, status=True)
 
 
@@ -62,9 +62,9 @@ def test3():
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
         news = db_sess.query(News).filter(
-            (News.user == current_user) | (News.is_private != True))
+            (News.user == current_user) | (News.is_private is not True))
     else:
-        news = db_sess.query(News).filter(News.is_private != True)
+        news = db_sess.query(News).filter(News.is_private is not True)
     return render_template("Страница-1.html", news=news[::-1], status=True)
 
 
@@ -88,9 +88,9 @@ def index():
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
         news = db_sess.query(News).filter(
-            (News.user == current_user) | (News.is_private != True))
+            (News.user == current_user) | (News.is_private is not True))
     else:
-        news = db_sess.query(News).filter(News.is_private != True)
+        news = db_sess.query(News).filter(News.is_private is not True)
     return render_template("index.html", news=news[::-1])
 
 
@@ -111,7 +111,8 @@ def sample_file_upload():
                              href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css"
                              integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1"
                              crossorigin="anonymous">
-                            <link rel="stylesheet" type="text/css" href="{url_for('static', filename='css/style.css')}" />
+                            <link rel="stylesheet" type="text/css"
+                             href="{url_for('static', filename='css/style.css')}"/>
                             <title>Пример загрузки файла</title>
                           </head>
                           <body>
@@ -229,7 +230,9 @@ def news_delete(id):
 def news_item(id):
     db_sess = db_session.create_session()
     news = db_sess.query(News).filter(News.id == id).first()
-    return render_template("blog_item.html", news=news)
+    author = find_news_author(news.id)[0]
+    print(author)
+    return render_template("blog_item.html", news=news, aut=author)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -261,14 +264,16 @@ def reqister():
     return render_template('register.html', title='Регистрация', form=form)
 
 
-@app.route('/view_acc')
-def view():
-    return render_template('profile.html', user=current_user, status=False, property=current_user)
+@app.route('/view_acc/<int:owner>')
+def view(owner):
+    info = downoload_users_datum(owner)
+    return render_template('profile.html', user=current_user, status=False, access=info)
 
 
-@app.route('/open_chat/<current_user>')
-def chat():
-    return ''
+@app.route('/open_chat/<current_user>/<recipient>')
+def chat(curr_user, recipient):
+    info = import_history_of_chat(current_user, recipient)
+    return render_template('chat_page.html', data=info, status=True)
 
 
 @app.route('/rules')  # todo rules of communication

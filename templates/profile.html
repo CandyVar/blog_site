@@ -15,14 +15,18 @@
               <div class="u-container-style u-layout-cell u-size-20 u-layout-cell-1">
                 <div class="u-container-layout u-container-layout-1">
                   <h4 class="u-text u-text-3">About me</h4>
-                  <p class="u-text u-text-4">{{ user.about }} &nbsp;</p>
+                  <p class="u-text u-text-4">{{ access[2] }} &nbsp;</p>
                 </div>
               </div>
               <div class="u-container-style u-layout-cell u-size-20 u-layout-cell-2">
                 <div class="u-container-layout u-container-layout-2">
-                  <img class="u-image u-image-circle u-image-1" src="static/img/ranks/{{ user.rank }}.png" alt="" data-image-width="1000" data-image-height="833">
-                  <img class="u-image u-image-circle u-preserve-proportions u-image-2" src="static/img/up/{{ user.id }}.jpeg" alt="" data-image-width="700" data-image-height="700">
+                  <img class="u-image u-image-circle u-image-1" src="static/img/ranks/{{ access[3]}}.png" alt="" data-image-width="1000" data-image-height="833">
+                  <img class="u-image u-image-circle u-preserve-proportions u-image-2" src="static/img/up/{{ access[0] }}.jpeg" alt="" data-image-width="700" data-image-height="700">
+                  {% if access[0] == user.id %}
                   <a href="/avatar" class="u-border-none u-btn u-btn-round u-button-style u-hover-palette-2-base u-palette-2-light-2 u-radius u-btn-2">Сменить аватарку</a>
+                  {% else %}
+                  <a href="/open_chat/{{ access[0] }}/{{ user.id }}" class="u-border-none u-btn u-btn-round u-button-style u-hover-palette-2-base u-palette-2-light-2 u-radius u-btn-2">Открыть чат</a>
+                  {% endif %}
                 </div>
               </div>
               <div class="u-container-style u-layout-cell u-size-20 u-layout-cell-3">
@@ -30,10 +34,7 @@
                   <h4 class="u-text u-text-6">Details</h4>
                   <p class="u-text u-text-7">
                     <span style="font-weight: 700;">Name: </span>
-                    <br>{{ user.name }}<br>
-                    <span style="font-weight: 700;">Age: </span>
-                    <br>{% if not user.age %}0 years {% else %} {{ user.age }} {% endif %}<span style="font-weight: 700;">
-                  </span>
+                    <br>{{ access[1] }}<br>
                   </p>
                 </div>
               </div>
