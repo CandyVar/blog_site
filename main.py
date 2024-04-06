@@ -253,6 +253,7 @@ def reqister():
 
 
 @app.route('/view_acc')
+@login_required
 def view():
     return render_template('profile.html', user=current_user, status=False, property=current_user)
 
