@@ -5,11 +5,11 @@ from flask import redirect
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restful import abort, Api
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
-from werkzeug.utils import secure_filename
+from sqlalchemy.orm import sessionmaker
+
 
 from forms.news import NewsForm
-from forms.user import RegisterForm, LoginForm, AvatarForm
+from forms.user import RegisterForm, LoginForm
 from data.news import News
 from data import db_session, news_api, news_resources
 from data.users import User
@@ -27,11 +27,14 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 admins = 5
 
-
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()
     return db_sess.query(User).get(user_id)
+
+@app.route('/')
+def index():
+    return render_template('Главная.html', title='Главная страница')
 
 
 @app.route('/logout')
@@ -49,23 +52,7 @@ def test():
             (News.user == current_user) | (News.is_private != True))
     else:
         news = db_sess.query(News).filter(News.is_private != True)
-    return render_template("blog.html", news=news[::-1], admins=admins, status=True)
-
-
-@app.route('/')
-def test2():
-    return render_template('Главная.html', title='Тест страница', status=True)
-
-
-@app.route('/test3')
-def test3():
-    db_sess = db_session.create_session()
-    if current_user.is_authenticated:
-        news = db_sess.query(News).filter(
-            (News.user == current_user) | (News.is_private != True))
-    else:
-        news = db_sess.query(News).filter(News.is_private != True)
-    return render_template("Страница-1.html", news=news[::-1], status=True)
+    return render_template("blog.html",title='Блог', news=news[::-1], admins=admins)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -81,22 +68,6 @@ def login():
                                message="Неправильный логин или пароль",
                                form=form)
     return render_template('login.html', title='Авторизация', form=form)
-
-
-@app.route("/1")
-def index():
-    db_sess = db_session.create_session()
-    if current_user.is_authenticated:
-        news = db_sess.query(News).filter(
-            (News.user == current_user) | (News.is_private != True))
-    else:
-        news = db_sess.query(News).filter(News.is_private != True)
-    return render_template("index.html", news=news[::-1])
-
-
-@app.route("/main")
-def main():
-    return render_template("main_page.html")
 
 
 @app.route('/avatar', methods=['POST', 'GET'])
@@ -139,23 +110,23 @@ def sample_file_upload():
             return "Ошибка при загрузке файла"
 
 
+
 @app.route('/blog/new', methods=['GET', 'POST'])
 @login_required
 def add_news():
-    if request.method == 'GET':
-        form = NewsForm()
-        if form.validate_on_submit():
-            db_sess = db_session.create_session()
-            news = News()
-            news.title = form.title.data
-            news.content = form.content.data
-            news.is_private = form.is_private.data
-            current_user.news.append(news)
-            db_sess.merge(current_user)
-            db_sess.commit()
-            return redirect('/blog')
-        return render_template('news.html', title='Добавление новости',
-                               form=form)
+    form = NewsForm()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        news = News()
+        news.title = form.title.data
+        news.content = form.content.data
+        news.is_private = form.is_private.data
+        current_user.news.append(news)
+        db_sess.merge(current_user)
+        db_sess.commit()
+        return redirect('/blog')
+    return render_template('news.html', title='Добавление новости',
+                           form=form)
 
 
 @app.route('/blog/edit/<int:id>', methods=['GET', 'POST'])
@@ -220,7 +191,7 @@ def news_delete(id):
 def news_item(id):
     db_sess = db_session.create_session()
     news = db_sess.query(News).filter(News.id == id).first()
-    return render_template("blog_item.html", news=news)
+    return render_template("blog_item.html", news=news, title=news.title)
 
 
 @app.route('/register', methods=['GET', 'POST'])
