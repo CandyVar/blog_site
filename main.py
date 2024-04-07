@@ -8,6 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from werkzeug.utils import secure_filename
 
+from db.DB import import_history_of_chat, downoload_users_datum, find_news_author
 from forms.news import NewsForm
 from forms.user import RegisterForm, LoginForm, AvatarForm
 from data.news import News
@@ -17,7 +18,10 @@ from data.users import User
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 api = Api(app)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
+app.config['STATIC_FOLDER'] = './static'
 app.config['UPLOAD_FOLDER'] = 'static/img/up'
+app.config['UPLOAD_FOLDER_COVERS'] = 'static/covers'
+covers = app.config['UPLOAD_FOLDER_COVERS']
 upload_folder = app.config['UPLOAD_FOLDER']
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/blogs.db?check_same_thread=False'
 engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
@@ -214,6 +218,13 @@ def news_delete(id):
     return redirect('/blog')
 
 
+@app.route('/blog/<int:id>', methods=['GET'])
+def news_item(id):
+    db_sess = db_session.create_session()
+    news = db_sess.query(News).filter(News.id == id).first()
+    return render_template("blog_item.html", news=news)
+
+
 @app.route('/register', methods=['GET', 'POST'])
 def reqister():
     form = RegisterForm()
@@ -243,14 +254,16 @@ def reqister():
     return render_template('register.html', title='Регистрация', form=form)
 
 
-@app.route('/view_acc')
-def view():
-    return render_template('profile.html', user=current_user, status=False, property=current_user)
+@app.route('/profile/<int:owner>')
+def view(owner):
+    info = downoload_users_datum(owner)
+    return render_template('profile.html', user=current_user, status=False, access=info)
 
 
-@app.route('/open_chat/<current_user>')
-def chat():
-    return ''
+@app.route('/open_chat/<current_user>/<recipient>')
+def chat(curr_user, recipient):
+    info = import_history_of_chat(current_user, recipient)
+    return render_template('chat_page.html', data=info, status=True)
 
 
 @app.route('/rules')  # todo rules of communication
