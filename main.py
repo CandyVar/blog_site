@@ -70,11 +70,7 @@ def blog_teg(tag):
         news = db_sess.query(News).filter(News.is_private != True and News.tag == tag)
     return render_template("blog.html", news=news[::-1], admins=admins, status=True)
 
-@app.route('/blog/<int:id>', methods=['GET'])
-def news_item(id):
-    db_sess = db_session.create_session()
-    news = db_sess.query(News).filter(News.id == id).first()
-    return render_template("blog_item.html", news=news)
+
 
 
 @app.route('/')
