@@ -41,14 +41,14 @@ def logout():
 
 
 @app.route('/blog')
-def blog():
+def test():
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
         if current_user.rank >= admins:
             news = db_sess.query(News)
         else:
             news = db_sess.query(News).filter(
-                (News.user == current_user) or (News.is_private != True))
+                (News.user == current_user) | (News.is_private != True))
     else:
         news = db_sess.query(News).filter(News.is_private != True)
     return render_template("blog.html", news=news[::-1], admins=admins, status=True)
@@ -57,7 +57,11 @@ def blog():
 def blog_teg(tag):
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
-        news = db_sess.query(News).filter((News.tag == tag) and ((News.user == current_user) or (News.is_private != True)))
+        if current_user.rank >= admins:
+            news = db_sess.query(News).filter((News.tag == tag))
+        else:
+            news = db_sess.query(News).filter((News.tag == tag))
+            news = news.filter((News.user == current_user) | (News.is_private != True))
     else:
         news = db_sess.query(News).filter(News.is_private != True and News.tag == tag)
     return render_template("blog.html", news=news[::-1], admins=admins, status=True)
