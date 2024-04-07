@@ -14,10 +14,9 @@ from data.news import News
 from data import db_session, news_api, news_resources
 from data.users import User
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 api = Api(app)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
-app.config['STATIC_FOLDER'] = './static'
 app.config['UPLOAD_FOLDER'] = 'static/img/up'
 upload_folder = app.config['UPLOAD_FOLDER']
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/blogs.db?check_same_thread=False'
@@ -42,14 +41,32 @@ def logout():
 
 
 @app.route('/blog')
-def test():
+def blog():
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
-        news = db_sess.query(News).filter(
-            (News.user == current_user) | (News.is_private != True))
+        if current_user.rank >= admins:
+            news = db_sess.query(News)
+        else:
+            news = db_sess.query(News).filter(
+                (News.user == current_user) or (News.is_private != True))
     else:
         news = db_sess.query(News).filter(News.is_private != True)
     return render_template("blog.html", news=news[::-1], admins=admins, status=True)
+
+@app.route('/blog/@<tag>')
+def blog_teg(tag):
+    db_sess = db_session.create_session()
+    if current_user.is_authenticated:
+        news = db_sess.query(News).filter((News.tag == tag) and ((News.user == current_user) or (News.is_private != True)))
+    else:
+        news = db_sess.query(News).filter(News.is_private != True and News.tag == tag)
+    return render_template("blog.html", news=news[::-1], admins=admins, status=True)
+
+@app.route('/blog/<int:id>', methods=['GET'])
+def news_item(id):
+    db_sess = db_session.create_session()
+    news = db_sess.query(News).filter(News.id == id).first()
+    return render_template("blog_item.html", news=news)
 
 
 @app.route('/')
@@ -120,20 +137,20 @@ def sample_file_upload():
 @app.route('/blog/new', methods=['GET', 'POST'])
 @login_required
 def add_news():
-    if request.method == 'GET':
-        form = NewsForm()
-        if form.validate_on_submit():
-            db_sess = db_session.create_session()
-            news = News()
-            news.title = form.title.data
-            news.content = form.content.data
-            news.is_private = form.is_private.data
-            current_user.news.append(news)
-            db_sess.merge(current_user)
-            db_sess.commit()
-            return redirect('/blog')
-        return render_template('news.html', title='Добавление новости',
-                               form=form)
+    form = NewsForm()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        news = News()
+        news.title = form.title.data
+        news.content = form.content.data
+        news.is_private = form.is_private.data
+        news.tag = form.tag.data
+        current_user.news.append(news)
+        db_sess.merge(current_user)
+        db_sess.commit()
+        return redirect('/blog')
+    return render_template('news.html', title='Добавление новости',
+                           form=form)
 
 @app.route('/blog/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -191,13 +208,6 @@ def news_delete(id):
     else:
         abort(404)
     return redirect('/blog')
-
-
-@app.route('/blog/<int:id>', methods=['GET'])
-def news_item(id):
-    db_sess = db_session.create_session()
-    news = db_sess.query(News).filter(News.id == id).first()
-    return render_template("blog_item.html", news=news)
 
 
 @app.route('/register', methods=['GET', 'POST'])
