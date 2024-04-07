@@ -7,6 +7,7 @@ from flask_restful import abort, Api
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from werkzeug.utils import secure_filename
+
 from db.DB import import_history_of_chat, downoload_users_datum, find_news_author
 from forms.news import NewsForm
 from forms.user import RegisterForm, LoginForm, AvatarForm
@@ -19,6 +20,8 @@ api = Api(app)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 app.config['STATIC_FOLDER'] = './static'
 app.config['UPLOAD_FOLDER'] = 'static/img/up'
+app.config['UPLOAD_FOLDER_COVERS'] = 'static/covers'
+covers = app.config['UPLOAD_FOLDER_COVERS']
 upload_folder = app.config['UPLOAD_FOLDER']
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/blogs.db?check_same_thread=False'
 engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
@@ -118,7 +121,7 @@ def sample_file_upload():
                           <body>
                             <h1>Загрузим файл</h1>
                             <form method="post" enctype="multipart/form-data">
-                               <div class="form-group">
+                               <div class="form-group">   
                                     <label for="photo">Выберите файл</label>
                                     <input type="file" class="form-control-file" id="photo" name="file">
                                 </div>
@@ -134,7 +137,7 @@ def sample_file_upload():
             return redirect(request.url)
         if file:
             filename = str(current_user.id) + '.jpeg'
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            file.save(os.path.join(upload_folder, filename))
             return 'Успешно'
         else:
             return "Ошибка при загрузке файла"
@@ -143,29 +146,19 @@ def sample_file_upload():
 @app.route('/blog/new', methods=['GET', 'POST'])
 @login_required
 def add_news():
-    if request.method == 'GET':
-        form = NewsForm()
-        if form.validate_on_submit():
-            db_sess = db_session.create_session()
-            news = News()
-            news.title = form.title.data
-            news.content = form.content.data
-            news.is_private = form.is_private.data
-            current_user.news.append(news)
-            db_sess.merge(current_user)
-            db_sess.commit()
-            return redirect('/blog')
-        return render_template('news.html', title='Добавление новости',
-                               form=form)
-    elif request.method == 'POST':
-        if 'file' not in request.files:
-            return redirect(request.url)
-        file = request.files['file']
-        if file.filename == '':
-            return redirect(request.url)
-        if file:
-            filename = str(current_user.id) + '_'.join(new.title) + '.jpeg'
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    form = NewsForm()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        news = News()
+        news.title = form.title.data
+        news.content = form.content.data
+        news.is_private = form.is_private.data
+        current_user.news.append(news)
+        db_sess.merge(current_user)
+        db_sess.commit()
+        return redirect('/blog')
+    return render_template('news.html', title='Добавление новости',
+                           form=form)
 
 
 @app.route('/blog/edit/<int:id>', methods=['GET', 'POST'])
@@ -264,7 +257,7 @@ def reqister():
     return render_template('register.html', title='Регистрация', form=form)
 
 
-@app.route('/view_acc/<int:owner>')
+@app.route('/profile/<int:owner>')
 def view(owner):
     info = downoload_users_datum(owner)
     return render_template('profile.html', user=current_user, status=False, access=info)
