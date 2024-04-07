@@ -15,7 +15,7 @@ from data.news import News
 from data import db_session, news_api, news_resources
 from data.users import User
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 api = Api(app)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 app.config['STATIC_FOLDER'] = './static'
@@ -48,8 +48,11 @@ def logout():
 def test():
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
-        news = db_sess.query(News).filter(
-            (News.user == current_user) | (News.is_private is not True))
+        if current_user.rank >= admins:
+            news = db_sess.query(News)
+        else:
+            news = db_sess.query(News).filter(
+                (News.user == current_user) | (News.is_private is not True))
     else:
         news = db_sess.query(News).filter(News.is_private is not True)
     return render_template("blog.html", news=news[::-1], admins=admins, status=True)
@@ -105,30 +108,7 @@ def main():
 @app.route('/avatar', methods=['POST', 'GET'])
 def sample_file_upload():
     if request.method == 'GET':
-        return f'''<!doctype html>
-                        <html lang="en">
-                          <head>
-                            <meta charset="utf-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-                             <link rel="stylesheet"
-                             href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css"
-                             integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1"
-                             crossorigin="anonymous">
-                            <link rel="stylesheet" type="text/css"
-                             href="{url_for('static', filename='css/style.css')}"/>
-                            <title>Пример загрузки файла</title>
-                          </head>
-                          <body>
-                            <h1>Загрузим файл</h1>
-                            <form method="post" enctype="multipart/form-data">
-                               <div class="form-group">   
-                                    <label for="photo">Выберите файл</label>
-                                    <input type="file" class="form-control-file" id="photo" name="file">
-                                </div>
-                                <button type="submit" class="btn btn-primary">Отправить</button>
-                            </form>
-                          </body>
-                        </html>'''
+        return render_template("avatar.html")
     elif request.method == 'POST':
         if 'file' not in request.files:
             return redirect(request.url)
@@ -137,6 +117,8 @@ def sample_file_upload():
             return redirect(request.url)
         if file:
             filename = str(current_user.id) + '.jpeg'
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect('/profile')
             file.save(os.path.join(upload_folder, filename))
             return 'Успешно'
         else:
@@ -153,6 +135,7 @@ def add_news():
         news.title = form.title.data
         news.content = form.content.data
         news.is_private = form.is_private.data
+        news.tag = form.tag.data
         current_user.news.append(news)
         db_sess.merge(current_user)
         db_sess.commit()
