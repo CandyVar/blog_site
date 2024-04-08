@@ -4,6 +4,7 @@ from flask import Flask, render_template, request, make_response, jsonify, url_f
 from flask import redirect
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restful import abort, Api
+from flask_socketio import SocketIO, emit, join_room, leave_room
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from werkzeug.utils import secure_filename
@@ -14,9 +15,11 @@ from forms.user import RegisterForm, LoginForm, AvatarForm
 from data.news import News
 from data import db_session, news_api, news_resources
 from data.users import User
+from data.messages import Message
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 api = Api(app)
+sio = SocketIO(app)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 app.config['STATIC_FOLDER'] = './static'
 app.config['UPLOAD_FOLDER'] = 'static/img/up'
@@ -29,6 +32,7 @@ Session = sessionmaker(bind=engine)
 login_manager = LoginManager()
 login_manager.init_app(app)
 admins = 5
+send_to_user = User()
 
 
 @login_manager.user_loader
@@ -118,11 +122,9 @@ def sample_file_upload():
         if file:
             filename = str(current_user.id) + '.jpeg'
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect('/profile')
             file.save(os.path.join(upload_folder, filename))
-            return 'Успешно'
-        else:
-            return "Ошибка при загрузке файла"
+            return redirect('/profile')
+        return "Ошибка при загрузке файла"
 
 
 @app.route('/blog/new', methods=['GET', 'POST'])
@@ -246,10 +248,44 @@ def view(owner):
     return render_template('profile.html', user=current_user, status=False, access=info)
 
 
-@app.route('/open_chat/<current_user>/<recipient>')
+@app.route('/open_chat/<current_user>/<recipient>', methods=['GET', 'POST'])
 def chat(curr_user, recipient):
-    info = import_history_of_chat(current_user, recipient)
-    return render_template('chat_page.html', data=info, status=True)
+    global send_to_user
+    send_to_user = recipient
+    db_sess = db_session.create_session()
+    m = db_sess.query(Messages).filter((Messages.author in (curr_user or recipient))
+                                       and (Messages.recipient in (curr_user or recipient))
+                                       and (Messages.author != Messages.recipient))
+    db_sess.close()
+    return render_template('chat_page.html', data=m, status=True)
+
+
+@socketio.on('join')
+def handle_join(data):
+    room = data['room']
+    join_room(room)
+    emit('message', f'User has joined the room: {room}', room=room)
+
+
+@socketio.on('leave')
+def handle_leave(data):
+    room = data['room']
+    leave_room(room)
+    emit('message', f'User has left the room: {room}', room=room)
+
+
+@socketio.on('message')
+def handle_message(data):
+    room = data['room']
+    message = data['message']
+    db_sess = db_session.create_session()
+    m = Message()
+    m.author = current_user.id
+    m.recipient = send_to_user
+    m.message = message
+    db_sess.add(m)
+    db_sess.commit()
+    emit('message', message, room=room)
 
 
 @app.route('/rules')  # todo rules of communication
@@ -275,7 +311,7 @@ def main():
 
     # для одного объекта
     api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
-    app.run()
+    sio.run(app)
 
 
 if __name__ == '__main__':

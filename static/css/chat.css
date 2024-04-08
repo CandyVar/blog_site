@@ -1,0 +1,11 @@
+#chat {
+    height: 300px;
+    overflow-y: scroll;
+}
+#chat-messages {
+    list-style-type: none;
+    padding: 0;
+}
+#message-input {
+    width: 80%;
+}

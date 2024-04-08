@@ -37,9 +37,9 @@ def import_history_of_chat(current, reciever):
         print("Данный чат недоступен.")
         conn.close()
         return
-    dialog = cur.execute(f'SELECT autor, recipient, message, sending_date '
-                         f'FROM chats WHERE autor="{current or reciever}" AND recipient="{current or reciever}"'
-                         f' AND autor<>recipient').fetchall()
+    dialog = cur.execute(f'SELECT author, recipient, message, sending_date '
+                         f'FROM chats WHERE author="{current or reciever}" AND recipient="{current or reciever}"'
+                         f' AND author<>recipient').fetchall()
     return dialog
 
 
