@@ -231,7 +231,7 @@ def news_item(id):
     news = db_sess.query(News).filter(News.id == id).first()
     com = db_sess.query(Com).filter(Com.news_id == id)
     return render_template('blog_i.html', title='Блог',
-                           form=form, news=news, com=com[::-1])
+                           form=form, news=news, com=com[::-1], status=True, admin=admins)
 
 
 @app.route('/register', methods=['GET', 'POST'])

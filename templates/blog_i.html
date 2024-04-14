@@ -5,6 +5,7 @@
 <html style="font-size: 16px;" lang="ru"><head>
     <link rel="stylesheet" href="/static/css/nicepage.css" media="screen">
 <link rel="stylesheet" href="/static/css/blog_i.css" media="screen">
+    <link rel="stylesheet" href="/static/css/style.css" media="screen">
     <script class="u-script" type="text/javascript" src="/static/js/jquery-1.9.1.min.js" defer=""></script>
     <script class="u-script" type="text/javascript" src="/static/js/nicepage.js" defer=""></script>
     <meta name="generator" content="Nicepage 6.8.3, nicepage.com">
@@ -14,7 +15,7 @@
     <meta property="og:type" content="website">
     <link rel="canonical" href="/">
   <meta data-intl-tel-input-cdn-path="intlTelInput/"></head>
-  <body data-path-to-root="./" data-include-products="false" class="u-body u-gradient u-xl-mode" data-lang="ru" style="background-image: linear-gradient(black, #ff000b);">
+  <body data-path-to-root="./" data-include-products="false" class="u-body u-gradient u-xl-mode" data-lang="ru" style="background-image: linear-gradient(black, #A8011f);">
     <section class="u-align-center u-clearfix u-section-1" id="sec-c239">
       <div class="u-clearfix u-sheet u-sheet-1">
         <h3 class="u-align-center-md u-align-center-sm u-align-center-xs u-hidden-lg u-hidden-xl u-hidden-xs u-text u-text-white u-text-1">{{news.user.name}} </h3>
@@ -42,12 +43,21 @@
             <img class="u-image u-image-circle u-image-1"  alt="" src="/static/img/ranks/{{item.user.rank}}.png" data-image-width="1280" data-image-height="853">
             <img class="u-border-2 u-border-grey-75 u-hidden-md u-hidden-sm u-image u-image-circle u-image-2" alt="" data-image-width="960" src="/static/img/up/{{item.user.id}}.jpeg" data-image-height="1280">
             <p class="u-align-center u-text u-text-white u-text-1">{{item.user.name}}</p>
-            <p class="u-align-center u-text u-text-white u-text-2">Rank: {{item.user.rank}}</p>
+              {% if item.user.rank < admin %}
+            <p class="u-align-center u-text u-text-user u-text-2">User</p>
+              {% endif %}
+              {% if item.user.rank >= admin %}
+            <p class="u-align-center u-text u-text-admin-plus u-text-2">Admin</p>
+              {% endif %}
           </div>
         </div><span class="u-file-icon u-icon u-icon-1" data-href="#"><img src="images/10903479.png" alt=""></span>
         <div class="custom-expanded u-container-style u-group u-shape-rectangle u-group-2">
           <div class="u-container-layout u-valign-top-lg u-valign-top-md u-valign-top-sm u-valign-top-xs u-container-layout-2">
-            <p class="u-text u-text-white u-text-3">{{item.content}}<br>
+              {% if item.user.rank >= admin %}
+            <p class="u-text u-text-admin u-text-3">{{item.content}}<br>
+                {% else %}
+              <p class="u-text u-text-white u-text-3">{{item.content}}<br>
+              {% endif %}
             </p>
           </div>
         </div>
