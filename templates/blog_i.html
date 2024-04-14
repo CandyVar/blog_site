@@ -50,7 +50,10 @@
             <p class="u-align-center u-text u-text-admin-plus u-text-2">Admin</p>
               {% endif %}
           </div>
-        </div><span class="u-file-icon u-icon u-icon-1" data-href="#"><img src="images/10903479.png" alt=""></span>
+        </div>
+          {% if current_user.is_authenticated and current_user == item.user or current_user.is_authenticated and current_user.rank >= admin%}
+          <span class="u-file-icon u-icon u-icon-1" data-href="/com_delete/{{item.id}}"><img src="/static/img/delete.png" alt=""></span>
+          {% endif %}
         <div class="custom-expanded u-container-style u-group u-shape-rectangle u-group-2">
           <div class="u-container-layout u-valign-top-lg u-valign-top-md u-valign-top-sm u-valign-top-xs u-container-layout-2">
               {% if item.user.rank >= admin %}

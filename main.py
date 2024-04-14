@@ -215,6 +215,23 @@ def news_delete(id):
         abort(404)
     return redirect('/blog')
 
+@app.route('/com_delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def com_delete(id):
+    db_sess = db_session.create_session()
+    if current_user.rank >= admins:
+        com = db_sess.query(Com).filter(Com.id == id).first()
+    else:
+        com = db_sess.query(Com).filter(Com.id == id,
+                                          Com.user == current_user
+                                          ).first()
+    if com:
+        db_sess.delete(com)
+        db_sess.commit()
+    else:
+        abort(404)
+    return '<script>document.location.href = document.referrer</script>'
+
 
 @app.route('/blog/<int:id>', methods=['GET', 'POST'])
 def news_item(id):
