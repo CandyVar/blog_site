@@ -218,7 +218,7 @@ def news_delete(id):
 def news_item(id):
     db_sess = db_session.create_session()
     news = db_sess.query(News).filter(News.id == id).first()
-    return render_template("blog_item.html", news=news)
+    return render_template("blog_i.html", news=news)
 
 
 @app.route('/register', methods=['GET', 'POST'])
