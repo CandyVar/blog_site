@@ -46,7 +46,10 @@
               {% if item.user.rank < admin %}
             <p class="u-align-center u-text u-text-user u-text-2">User</p>
               {% endif %}
-              {% if item.user.rank >= admin %}
+              {% if sys > item.user.rank >= admin %}
+            <p class="u-align-center u-text u-text-admin-plus u-text-2">Admin</p>
+              {% endif %}
+              {% if item.user.rank == sys %}
             <p class="u-align-center u-text u-text-admin-plus u-text-2">Admin</p>
               {% endif %}
           </div>
@@ -56,7 +59,7 @@
           {% endif %}
         <div class="custom-expanded u-container-style u-group u-shape-rectangle u-group-2">
           <div class="u-container-layout u-valign-top-lg u-valign-top-md u-valign-top-sm u-valign-top-xs u-container-layout-2">
-              {% if item.user.rank >= admin %}
+              {% if item.user.rank == sys %}
             <p class="u-text u-text-admin u-text-3">{{item.content}}<br>
                 {% else %}
               <p class="u-text u-text-white u-text-3">{{item.content}}<br>

@@ -31,6 +31,26 @@ Session = sessionmaker(bind=engine)
 login_manager = LoginManager()
 login_manager.init_app(app)
 admins = 5
+system = 100
+com_sys = True
+
+
+def ComSorter(com_list, id):
+    if com_sys:
+        listt = {'system': [], 'author': [], 'admins': [], 'base': []}
+        for item in com_list[::-1]:
+            if item.user.rank == system:
+                listt['system'].append(item)
+            elif item.user.id == id:
+                listt['author'].append(item)
+            elif item.user.rank >= admins and item.user.rank != system:
+                listt['author'].append(item)
+            else:
+                listt['base'].append(item)
+        return listt['system'] + listt['author'] + listt['admins'] + listt['base']
+    else:
+        return com_list[::-1]
+
 
 
 @login_manager.user_loader
@@ -248,7 +268,7 @@ def news_item(id):
     news = db_sess.query(News).filter(News.id == id).first()
     com = db_sess.query(Com).filter(Com.news_id == id)
     return render_template('blog_i.html', title='Блог',
-                           form=form, news=news, com=com[::-1], status=True, admin=admins)
+                           form=form, news=news, com=ComSorter(com, id), status=True, admin=admins, sys=system)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -283,7 +303,7 @@ def reqister():
 @app.route('/profile/<int:owner>')
 def view(owner):
     info = downoload_users_datum(owner)
-    return render_template('profile.html', user=current_user, status=False, access=info)
+    return render_template('profile.html', user=current_user, status=False, access=info, admin=admins, sys=system)
 
 
 @app.route('/open_chat/<current_user>/<recipient>')
