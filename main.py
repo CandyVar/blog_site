@@ -8,7 +8,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from werkzeug.utils import secure_filename
 
+from data.coment import Com
 from db.DB import import_history_of_chat, downoload_users_datum, find_news_author
+from forms.coment import ComForm
 from forms.news import NewsForm
 from forms.user import RegisterForm, LoginForm, AvatarForm
 from data.news import News
@@ -214,11 +216,22 @@ def news_delete(id):
     return redirect('/blog')
 
 
-@app.route('/blog/<int:id>', methods=['GET'])
+@app.route('/blog/<int:id>', methods=['GET', 'POST'])
 def news_item(id):
+    form = ComForm()
     db_sess = db_session.create_session()
+    if form.validate_on_submit():
+        com = Com()
+        com.content = form.content.data
+        com.news_id = id
+        current_user.com.append(com)
+        db_sess.merge(current_user)
+        db_sess.commit()
+        return redirect(f'/blog/{id}')
     news = db_sess.query(News).filter(News.id == id).first()
-    return render_template("blog_i.html", news=news)
+    com = db_sess.query(Com).filter(Com.news_id == id)
+    return render_template('blog_i.html', title='Блог',
+                           form=form, news=news, com=com[::-1])
 
 
 @app.route('/register', methods=['GET', 'POST'])
