@@ -1,40 +1,25 @@
 <!DOCTYPE html>
+{% extends "header.html" %}
+
+{% block content %}
 <html lang="en">
-<head>
-    <link rel="stylesheet" href="/static/css/chat.css">
-    <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
-<script>
- var socket = io();
-        function joinRoom() {
-            var room = document.getElementById('room').value;
-            socket.emit('join', { room: room });
-        }
-        function leaveRoom() {
-            var room = document.getElementById('room').value;
-            socket.emit('leave', { room: room });
-        }
-        function sendMessage() {
-            var room = document.getElementById('room').value;
-            var message = document.getElementById('message').value;
-            socket.emit('message', { room: room, message: message });
-        }
-        socket.on('message', function(message) {
-            var messagesDiv = document.getElementById('messages');
-            messagesDiv.innerHTML += '<p>' + message + '</p>';
-        });
-</script>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
+<title>{{rec}}</title>
 <body>
-<div id="chat">
-    <ul id="chat-messages"></ul>
+<div style="overflow: auto; width: 1600px; height: 1000px;">
+        {% for mess in data %}
+        {% if mess[0] == user.id %}
+    <span style="color: red; background-color: white; font-size: 20px">
+        {{user.name}}: {{mess[2]}}<br></span>
+        {% elif mess[0] == rec[0]%}
+    <span style="color: blue; background-color: white; font-size: 20px">
+        {{rec[1]}}: {{mess[2]}}<br></span>
+        {% endif %}
+    <br>
+        {% endfor %}
 </div>
-{% for m in data %}
-<div>{{ m.author }}:</div>
-<div>{{ m.message }}</div>
-{% endfor %}
-<input type="text" id="message" placeholder="Enter a message..">
-<button onclick="sendMessage()">Отправить</button>
-</body>
-</html>
+    <form action="" method="post" >
+        {{ form.content(class="form-control") }}<br>
+<p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+</form></body>
+
+    {% endblock %}

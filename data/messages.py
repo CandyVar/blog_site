@@ -11,9 +11,8 @@ class Message(SqlAlchemyBase, SerializerMixin):
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)
     author = sqlalchemy.Column(sqlalchemy.Integer,
-                               sqlalchemy.ForeignKey("users.id"), nullable=False)
-    recipient = sqlalchemy.Column(sqlalchemy.Integer,
-                                  sqlalchemy.ForeignKey("users.id"), nullable=False)
+                               sqlalchemy.ForeignKey("users.id"))
+    recipient = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('users.id'))
     message = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     sending_date = sqlalchemy.Column(sqlalchemy.DateTime,
                                      default=datetime.datetime.now)

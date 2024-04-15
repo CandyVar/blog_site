@@ -4,7 +4,6 @@ from flask import Flask, render_template, request, make_response, jsonify, url_f
 from flask import redirect
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restful import abort, Api
-from flask_socketio import SocketIO, emit, join_room, leave_room
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from werkzeug.utils import secure_filename
@@ -12,6 +11,7 @@ from werkzeug.utils import secure_filename
 from db.DB import import_history_of_chat, downoload_users_datum, find_news_author
 from forms.news import NewsForm
 from forms.user import RegisterForm, LoginForm, AvatarForm
+from forms.messages import MessageForm
 from data.news import News
 from data import db_session, news_api, news_resources
 from data.users import User
@@ -19,7 +19,6 @@ from data.messages import Message
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 api = Api(app)
-sio = SocketIO(app)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 app.config['STATIC_FOLDER'] = './static'
 app.config['UPLOAD_FOLDER'] = 'static/img/up'
@@ -32,7 +31,6 @@ Session = sessionmaker(bind=engine)
 login_manager = LoginManager()
 login_manager.init_app(app)
 admins = 5
-send_to_user = User()
 
 
 @login_manager.user_loader
@@ -209,7 +207,6 @@ def news_item(id):
     db_sess = db_session.create_session()
     news = db_sess.query(News).filter(News.id == id).first()
     author = find_news_author(news.id)[0]
-    print(author)
     return render_template("blog_item.html", news=news, aut=author)
 
 
@@ -248,44 +245,24 @@ def view(owner):
     return render_template('profile.html', user=current_user, status=False, access=info)
 
 
-@app.route('/open_chat/<current_user>/<recipient>', methods=['GET', 'POST'])
-def chat(curr_user, recipient):
-    global send_to_user
-    send_to_user = recipient
+@app.route('/open_chat/<id>', methods=['GET', 'POST'])
+def chat(id):
+    form = MessageForm()
     db_sess = db_session.create_session()
-    m = db_sess.query(Messages).filter((Messages.author in (curr_user or recipient))
-                                       and (Messages.recipient in (curr_user or recipient))
-                                       and (Messages.author != Messages.recipient))
-    db_sess.close()
-    return render_template('chat_page.html', data=m, status=True)
-
-
-@socketio.on('join')
-def handle_join(data):
-    room = data['room']
-    join_room(room)
-    emit('message', f'User has joined the room: {room}', room=room)
-
-
-@socketio.on('leave')
-def handle_leave(data):
-    room = data['room']
-    leave_room(room)
-    emit('message', f'User has left the room: {room}', room=room)
-
-
-@socketio.on('message')
-def handle_message(data):
-    room = data['room']
-    message = data['message']
-    db_sess = db_session.create_session()
-    m = Message()
-    m.author = current_user.id
-    m.recipient = send_to_user
-    m.message = message
-    db_sess.add(m)
-    db_sess.commit()
-    emit('message', message, room=room)
+    if request.method == 'POST':
+        mess = Message(
+            message=form.content.data,
+            author=current_user.id,
+            recipient=id
+        )
+        db_sess.add(mess)
+        db_sess.commit()
+    # m = db_sess.query(Message).filter((Message.author is current_user.id and Message.recipient == id) or (
+    #         Message.author is id and Message.recipient == current_user.id))
+    m = import_history_of_chat(current_user.id, id)
+    other_user = downoload_users_datum(id, flag=False)
+    form.content.data = ''
+    return render_template('chat_page.html', form=form, data=m, user=current_user, rec=other_user, status=True)
 
 
 @app.route('/rules')  # todo rules of communication
@@ -311,7 +288,7 @@ def main():
 
     # для одного объекта
     api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
-    sio.run(app)
+    app.run()
 
 
 if __name__ == '__main__':
