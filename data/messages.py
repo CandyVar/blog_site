@@ -16,6 +16,7 @@ class Message(SqlAlchemyBase, SerializerMixin):
     message = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     sending_date = sqlalchemy.Column(sqlalchemy.DateTime,
                                      default=datetime.datetime.now)
+    room_code = sqlalchemy.Column(sqlalchemy.String)
 
     def __repr__(self):
         return f'{self.content}'

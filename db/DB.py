@@ -25,18 +25,18 @@ def update_user_field(user_id, field, new_value):
     conn.close()
 
 
-def import_history_of_chat(current, reciever):
+def import_history_of_chat(room_code):
     con = sqlite3.connect('db/blogs.db')
     cur = con.cursor()
-    dialog = cur.execute(f'SELECT author, recipient, message, sending_date FROM chats WHERE (author="{current}" AND '
-                             f'recipient="{reciever}") OR (author="{reciever}"'
-                              f' AND recipient="{current}")').fetchall()
+    dialog = cur.execute(f'SELECT author, recipient, message, sending_date'
+                         f' FROM chats WHERE room_code="{room_code}"').fetchall()
     return dialog
 
 
 def downoload_users_datum(user_id, flag=True):
     con = sqlite3.connect('db/blogs.db')
     cur = con.cursor()
+
     if flag:
         return cur.execute(f'SELECT id, name, about, rank, email FROM users WHERE id={user_id}').fetchone()
     return cur.execute(f'SELECT id, name FROM users WHERE id={user_id}').fetchone()
@@ -46,6 +46,13 @@ def find_news_author(news_id):
     con = sqlite3.connect('db/blogs.db')
     cur = con.cursor()
     return cur.execute(f'SELECT user_id FROM news WHERE id={news_id}').fetchone()
+
+
+def existing_room(f, s):
+    con = sqlite3.connect('db/blogs.db')
+    cur = con.cursor()
+    rooms_id = f"{max(f, s)}:{min(f, s)}"
+    return cur.execute(f'SELECT code FROM rooms WHERE members="{rooms_id}"').fetchone()
 
 
 # Основная функция программы

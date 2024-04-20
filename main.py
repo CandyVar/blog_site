@@ -1,14 +1,15 @@
 import os
 
-from flask import Flask, render_template, request, make_response, jsonify, url_for
+from flask import Flask, render_template, request, make_response, jsonify, url_for, session
 from flask import redirect
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restful import abort, Api
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from werkzeug.utils import secure_filename
-
-from db.DB import import_history_of_chat, downoload_users_datum, find_news_author
+from flask_socketio import SocketIO, join_room, leave_room, send
+from create_room import generate_room_code
+from db.DB import import_history_of_chat, downoload_users_datum, find_news_author, existing_room
 from forms.news import NewsForm
 from forms.user import RegisterForm, LoginForm, AvatarForm
 from forms.messages import MessageForm
@@ -16,6 +17,7 @@ from data.news import News
 from data import db_session, news_api, news_resources
 from data.users import User
 from data.messages import Message
+from data.rooms import Room
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 api = Api(app)
@@ -27,7 +29,8 @@ covers = app.config['UPLOAD_FOLDER_COVERS']
 upload_folder = app.config['UPLOAD_FOLDER']
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/blogs.db?check_same_thread=False'
 engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
-Session = sessionmaker(bind=engine)
+# Session = sessionmaker(bind=engine)
+socketio = SocketIO(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 admins = 5
@@ -144,7 +147,7 @@ def add_news():
                            form=form)
 
 
-@app.route('/blog/edit/<int:id>', methods=['GET', 'POST'])
+@app.route('/blog/edit/<id>', methods=['GET', 'POST'])
 @login_required
 def edit_news(id):
     form = NewsForm()
@@ -227,11 +230,10 @@ def reqister():
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Такой пользователь уже есть")
-        user = User(
-            name=form.name.data,
-            email=form.email.data,
-            about=form.about.data,
-        )
+        user = User()
+        user.name = form.name.data
+        user.email = form.email.data
+        user.about = form.about.data
         user.set_password(form.password.data)
         db_sess.add(user)
         db_sess.commit()
@@ -247,22 +249,22 @@ def view(owner):
 
 @app.route('/open_chat/<id>', methods=['GET', 'POST'])
 def chat(id):
-    form = MessageForm()
-    db_sess = db_session.create_session()
-    if request.method == 'POST':
-        mess = Message(
-            message=form.content.data,
-            author=current_user.id,
-            recipient=id
-        )
-        db_sess.add(mess)
+    res = existing_room(int(current_user.id), int(id))
+    if res is None:
+        db_sess = db_session.create_session()
+        r = Room()
+        r.code = room_code = generate_room_code(6)
+        r.members = f"{max(int(current_user.id), int(id))}:{min(int(current_user.id), int(id))}"
+        db_sess.add(r)
         db_sess.commit()
-    # m = db_sess.query(Message).filter((Message.author is current_user.id and Message.recipient == id) or (
-    #         Message.author is id and Message.recipient == current_user.id))
-    m = import_history_of_chat(current_user.id, id)
-    other_user = downoload_users_datum(id, flag=False)
-    form.content.data = ''
-    return render_template('chat_page.html', form=form, data=m, user=current_user, rec=other_user, status=True)
+    else:
+        room_code = res[0]
+    session['room'] = room_code
+    session['rec'] = id
+    other_user = downoload_users_datum(id, False)
+    m = import_history_of_chat(room_code)
+    return render_template('chat_page.html', user=current_user, other=other_user, room=room_code,
+                           messages=m, status=True)
 
 
 @app.route('/rules')  # todo rules of communication
@@ -280,6 +282,37 @@ def bad_request(_):
     return make_response(jsonify({'error': 'Bad Request'}), 400)
 
 
+@socketio.on('connect')
+def handle_connect():
+    room = session.get('room')
+    join_room(room)
+
+
+@socketio.on('message')
+def handle_message(payload):
+    room = session.get('room')
+    rec = session.get('rec')
+    message = {
+        "sender": current_user.name,
+        "message": payload["message"]
+    }
+    send(message, to=room)
+    msg = Message()
+    msg.author = current_user.id
+    msg.recipient = rec
+    msg.message = payload["message"]
+    msg.room_code = room
+    db_sess = db_session.create_session()
+    db_sess.add(msg)
+    db_sess.commit()
+
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    room = session.get("room")
+    leave_room(room)
+
+
 def main():
     db_session.global_init("db/blogs.db")
     app.register_blueprint(news_api.blueprint)
@@ -289,6 +322,7 @@ def main():
     # для одного объекта
     api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
     app.run()
+    socketio.run(app)
 
 
 if __name__ == '__main__':
