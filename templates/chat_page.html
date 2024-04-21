@@ -36,10 +36,10 @@
     var socketio = io();
 
     socketio.on("message", function (message) {
-      createChatItem(message.message, message.sender);
+      createChatItem(message.message, message.sender, message.date);
     });
 
-    function createChatItem(message, sender) {
+    function createChatItem(message, sender, date) {
       var messages = document.getElementById("messages");
 
       if (sender === "") {
@@ -55,7 +55,7 @@
               <p>${message}</p>
               <small class="${
                 senderIsUser ? "muted-text" : "muted-text-white"
-              }">${new Date().toLocaleString()}</small>
+              }">${date}</small>
           </li>
       `;
       }
@@ -68,13 +68,13 @@
       if (msgInput.value === "") return;
 
       var msg = msgInput.value;
-      socketio.emit("message", { message: msg });
+      socketio.emit("message", { message: msg, date: new Date().toLocaleString() });
       msgInput.value = "";
     }
   </script>
   {% for message in messages %}
   <script type="text/javascript">
-    createChatItem("{{message[2]}}", "{{message[1]}}");
+    createChatItem("{{message[2]}}", "{{message[1]}}", "{{message[3]}}");
   </script>
 {% endfor %}
 </body></html></div>

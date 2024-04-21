@@ -1,3 +1,4 @@
+import datetime
 import os
 
 from flask import Flask, render_template, request, make_response, jsonify, url_for, session
@@ -273,7 +274,7 @@ def rule():
 
 
 @app.errorhandler(404)
-def not_found(error):
+def not_found():
     return make_response(jsonify({'error': 'Not found'}), 404)
 
 
@@ -294,7 +295,8 @@ def handle_message(payload):
     rec = session.get('rec')
     message = {
         "sender": current_user.name,
-        "message": payload["message"]
+        "message": payload["message"],
+        "date": payload['date']
     }
     send(message, to=room)
     msg = Message()
@@ -322,7 +324,7 @@ def main():
     # для одного объекта
     api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
     app.run()
-    socketio.run(app)
+    socketio.run(app, allow_unsafe_werkzeug=True)
 
 
 if __name__ == '__main__':

@@ -14,8 +14,8 @@ class Message(SqlAlchemyBase, SerializerMixin):
                                sqlalchemy.ForeignKey("users.id"))
     recipient = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('users.id'))
     message = sqlalchemy.Column(sqlalchemy.String, nullable=False)
-    sending_date = sqlalchemy.Column(sqlalchemy.DateTime,
-                                     default=datetime.datetime.now)
+    sending_date = sqlalchemy.Column(sqlalchemy.String,
+                                     default=datetime.datetime.now().strftime('%#m/%d/%Y %I:%M:%S %p'))
     room_code = sqlalchemy.Column(sqlalchemy.String)
 
     def __repr__(self):
