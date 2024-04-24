@@ -1,12 +1,16 @@
-h1 {
-   color: #d22e3a
+.u-text-admin{
+    color: #Fd768e !important;
+    text-shadow: #FC0 1px 0 10px;
 }
-h2 {
-   color: #ba55d3
+.u-text-admin-plus{
+    color: #Fd768e !important;
+    text-shadow: #FF00FF 1px 0 10px;
 }
-h3 {
-   color: #4ebbd4
+.u-text-admin-plus:hover{
+    color: #Fd768e !important;
+    text-shadow: #000000 1px 0 10px;
 }
-h4 {
-   color: #347d19
+.u-text-user{
+    color: #ffffff !important;
+    text-shadow: #FFFFFF 1px 0 10px;
 }

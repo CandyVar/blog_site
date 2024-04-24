@@ -11,6 +11,3 @@ class NewsForm(FlaskForm):
     is_private = BooleanField("Скрыть с главной страницы")
     tag = StringField("Тег")
     submit = SubmitField('Применить')
-    categories = orm.relationship("Category",
-                                  secondary="association",
-                                  backref="news")

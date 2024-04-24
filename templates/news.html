@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "header.html" %}
 
 {% block content %}
 <head>
@@ -39,7 +39,6 @@
         {% endfor %}
     </p>
     <p>{{ form.is_private() }} {{ form.is_private.label }}</p>
-    </body>
     <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
     {{message}}
 </form>

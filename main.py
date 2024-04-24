@@ -1,4 +1,3 @@
-import datetime
 import os
 
 from flask import Flask, render_template, request, make_response, jsonify, url_for, session
@@ -11,6 +10,10 @@ from werkzeug.utils import secure_filename
 from flask_socketio import SocketIO, join_room, leave_room, send
 from create_room import generate_room_code
 from db.DB import import_history_of_chat, downoload_users_datum, find_news_author, existing_room
+
+from data.coment import Com
+from db.DB import import_history_of_chat, downoload_users_datum, find_news_author
+from forms.coment import ComForm
 from forms.news import NewsForm
 from forms.user import RegisterForm, LoginForm, AvatarForm
 from forms.messages import MessageForm
@@ -30,11 +33,31 @@ covers = app.config['UPLOAD_FOLDER_COVERS']
 upload_folder = app.config['UPLOAD_FOLDER']
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/blogs.db?check_same_thread=False'
 engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
-# Session = sessionmaker(bind=engine)
-socketio = SocketIO(app)
+Session = sessionmaker(bind=engine)
 login_manager = LoginManager()
 login_manager.init_app(app)
+socketio = SocketIO(app)
 admins = 5
+system = 100
+com_sys = True
+
+
+def ComSorter(com_list, id):
+    if com_sys:
+        listt = {'system': [], 'author': [], 'admins': [], 'base': []}
+        for item in com_list[::-1]:
+            if item.user.rank == system:
+                listt['system'].append(item)
+            elif item.user.id == id:
+                listt['author'].append(item)
+            elif item.user.rank >= admins and item.user.rank != system:
+                listt['author'].append(item)
+            else:
+                listt['base'].append(item)
+        return listt['system'] + listt['author'] + listt['admins'] + listt['base']
+    else:
+        return com_list[::-1]
+
 
 
 @login_manager.user_loader
@@ -58,10 +81,25 @@ def test():
             news = db_sess.query(News)
         else:
             news = db_sess.query(News).filter(
-                (News.user == current_user) | (News.is_private is not True))
+                (News.user == current_user) | (News.is_private != True))
     else:
-        news = db_sess.query(News).filter(News.is_private is not True)
+        news = db_sess.query(News).filter(News.is_private != True)
     return render_template("blog.html", news=news[::-1], admins=admins, status=True)
+
+@app.route('/blog/@<tag>')
+def blog_teg(tag):
+    db_sess = db_session.create_session()
+    if current_user.is_authenticated:
+        if current_user.rank >= admins:
+            news = db_sess.query(News).filter((News.tag == tag))
+        else:
+            news = db_sess.query(News).filter((News.tag == tag))
+            news = news.filter((News.user == current_user) | (News.is_private != True))
+    else:
+        news = db_sess.query(News).filter(News.is_private != True and News.tag == tag)
+    return render_template("blog.html", news=news[::-1], admins=admins, status=True)
+
+
 
 
 @app.route('/')
@@ -74,9 +112,9 @@ def test3():
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
         news = db_sess.query(News).filter(
-            (News.user == current_user) | (News.is_private is not True))
+            (News.user == current_user) | (News.is_private != True))
     else:
-        news = db_sess.query(News).filter(News.is_private is not True)
+        news = db_sess.query(News).filter(News.is_private != True)
     return render_template("Страница-1.html", news=news[::-1], status=True)
 
 
@@ -100,9 +138,9 @@ def index():
     db_sess = db_session.create_session()
     if current_user.is_authenticated:
         news = db_sess.query(News).filter(
-            (News.user == current_user) | (News.is_private is not True))
+            (News.user == current_user) | (News.is_private != True))
     else:
-        news = db_sess.query(News).filter(News.is_private is not True)
+        news = db_sess.query(News).filter(News.is_private != True)
     return render_template("index.html", news=news[::-1])
 
 
@@ -124,9 +162,9 @@ def sample_file_upload():
         if file:
             filename = str(current_user.id) + '.jpeg'
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            file.save(os.path.join(upload_folder, filename))
-            return redirect('/profile')
-        return "Ошибка при загрузке файла"
+            return redirect('/view_acc')
+        else:
+            return "Ошибка при загрузке файла"
 
 
 @app.route('/blog/new', methods=['GET', 'POST'])
@@ -147,8 +185,7 @@ def add_news():
     return render_template('news.html', title='Добавление новости',
                            form=form)
 
-
-@app.route('/blog/edit/<id>', methods=['GET', 'POST'])
+@app.route('/blog/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_news(id):
     form = NewsForm()
@@ -205,13 +242,40 @@ def news_delete(id):
         abort(404)
     return redirect('/blog')
 
-
-@app.route('/blog/<int:id>', methods=['GET'])
-def news_item(id):
+@app.route('/com_delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def com_delete(id):
     db_sess = db_session.create_session()
+    if current_user.rank >= admins:
+        com = db_sess.query(Com).filter(Com.id == id).first()
+    else:
+        com = db_sess.query(Com).filter(Com.id == id,
+                                          Com.user == current_user
+                                          ).first()
+    if com:
+        db_sess.delete(com)
+        db_sess.commit()
+    else:
+        abort(404)
+    return '<script>document.location.href = document.referrer</script>'
+
+
+@app.route('/blog/<int:id>', methods=['GET', 'POST'])
+def news_item(id):
+    form = ComForm()
+    db_sess = db_session.create_session()
+    if form.validate_on_submit():
+        com = Com()
+        com.content = form.content.data
+        com.news_id = id
+        current_user.com.append(com)
+        db_sess.merge(current_user)
+        db_sess.commit()
+        return redirect(f'/blog/{id}')
     news = db_sess.query(News).filter(News.id == id).first()
-    author = find_news_author(news.id)[0]
-    return render_template("blog_item.html", news=news, aut=author)
+    com = db_sess.query(Com).filter(Com.news_id == id)
+    return render_template('blog_i.html', title='Блог',
+                           form=form, news=news, com=ComSorter(com, id), status=True, admin=admins, sys=system)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -231,10 +295,11 @@ def reqister():
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Такой пользователь уже есть")
-        user = User()
-        user.name = form.name.data
-        user.email = form.email.data
-        user.about = form.about.data
+        user = User(
+            name=form.name.data,
+            email=form.email.data,
+            about=form.about.data,
+        )
         user.set_password(form.password.data)
         db_sess.add(user)
         db_sess.commit()
@@ -245,7 +310,7 @@ def reqister():
 @app.route('/profile/<int:owner>')
 def view(owner):
     info = downoload_users_datum(owner)
-    return render_template('profile.html', user=current_user, status=False, access=info)
+    return render_template('profile.html', user=current_user, status=False, access=info, admin=admins, sys=system)
 
 
 @app.route('/open_chat/<id>', methods=['GET', 'POST'])
@@ -324,7 +389,6 @@ def main():
     # для одного объекта
     api.add_resource(news_resources.NewsResource, '/api/v2/news/<int:news_id>')
     app.run()
-    socketio.run(app, allow_unsafe_werkzeug=True)
 
 
 if __name__ == '__main__':
