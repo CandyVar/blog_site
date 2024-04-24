@@ -8,6 +8,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from werkzeug.utils import secure_filename
 
+from data.coment import Com
+from db.DB import import_history_of_chat, downoload_users_datum, find_news_author
+from forms.coment import ComForm
 from forms.news import NewsForm
 from forms.user import RegisterForm, LoginForm, AvatarForm
 from data.news import News
@@ -17,7 +20,10 @@ from data.users import User
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 api = Api(app)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
+app.config['STATIC_FOLDER'] = './static'
 app.config['UPLOAD_FOLDER'] = 'static/img/up'
+app.config['UPLOAD_FOLDER_COVERS'] = 'static/covers'
+covers = app.config['UPLOAD_FOLDER_COVERS']
 upload_folder = app.config['UPLOAD_FOLDER']
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/blogs.db?check_same_thread=False'
 engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
@@ -25,6 +31,26 @@ Session = sessionmaker(bind=engine)
 login_manager = LoginManager()
 login_manager.init_app(app)
 admins = 5
+system = 100
+com_sys = True
+
+
+def ComSorter(com_list, id):
+    if com_sys:
+        listt = {'system': [], 'author': [], 'admins': [], 'base': []}
+        for item in com_list[::-1]:
+            if item.user.rank == system:
+                listt['system'].append(item)
+            elif item.user.id == id:
+                listt['author'].append(item)
+            elif item.user.rank >= admins and item.user.rank != system:
+                listt['author'].append(item)
+            else:
+                listt['base'].append(item)
+        return listt['system'] + listt['author'] + listt['admins'] + listt['base']
+    else:
+        return com_list[::-1]
+
 
 
 @login_manager.user_loader
@@ -66,11 +92,7 @@ def blog_teg(tag):
         news = db_sess.query(News).filter(News.is_private != True and News.tag == tag)
     return render_template("blog.html", news=news[::-1], admins=admins, status=True)
 
-@app.route('/blog/<int:id>', methods=['GET'])
-def news_item(id):
-    db_sess = db_session.create_session()
-    news = db_sess.query(News).filter(News.id == id).first()
-    return render_template("blog_item.html", news=news)
+
 
 
 @app.route('/')
@@ -213,6 +235,41 @@ def news_delete(id):
         abort(404)
     return redirect('/blog')
 
+@app.route('/com_delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def com_delete(id):
+    db_sess = db_session.create_session()
+    if current_user.rank >= admins:
+        com = db_sess.query(Com).filter(Com.id == id).first()
+    else:
+        com = db_sess.query(Com).filter(Com.id == id,
+                                          Com.user == current_user
+                                          ).first()
+    if com:
+        db_sess.delete(com)
+        db_sess.commit()
+    else:
+        abort(404)
+    return '<script>document.location.href = document.referrer</script>'
+
+
+@app.route('/blog/<int:id>', methods=['GET', 'POST'])
+def news_item(id):
+    form = ComForm()
+    db_sess = db_session.create_session()
+    if form.validate_on_submit():
+        com = Com()
+        com.content = form.content.data
+        com.news_id = id
+        current_user.com.append(com)
+        db_sess.merge(current_user)
+        db_sess.commit()
+        return redirect(f'/blog/{id}')
+    news = db_sess.query(News).filter(News.id == id).first()
+    com = db_sess.query(Com).filter(Com.news_id == id)
+    return render_template('blog_i.html', title='Блог',
+                           form=form, news=news, com=ComSorter(com, id), status=True, admin=admins, sys=system)
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def reqister():
@@ -243,14 +300,16 @@ def reqister():
     return render_template('register.html', title='Регистрация', form=form)
 
 
-@app.route('/view_acc')
-def view():
-    return render_template('profile.html', user=current_user, status=False, property=current_user)
+@app.route('/profile/<int:owner>')
+def view(owner):
+    info = downoload_users_datum(owner)
+    return render_template('profile.html', user=current_user, status=False, access=info, admin=admins, sys=system)
 
 
-@app.route('/open_chat/<current_user>')
-def chat():
-    return ''
+@app.route('/open_chat/<current_user>/<recipient>')
+def chat(curr_user, recipient):
+    info = import_history_of_chat(current_user, recipient)
+    return render_template('chat_page.html', data=info, status=True)
 
 
 @app.route('/rules')  # todo rules of communication
