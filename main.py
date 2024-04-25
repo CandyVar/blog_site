@@ -162,7 +162,7 @@ def sample_file_upload():
         if file:
             filename = str(current_user.id) + '.jpeg'
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(f'/profile/'{current_user.id})
+            return redirect(f'/profile/{current_user.id}')
         else:
             return "Ошибка при загрузке файла"
 
